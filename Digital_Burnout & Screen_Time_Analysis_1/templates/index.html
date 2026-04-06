@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BurnoutAI Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f8;
+  --bg2:#ffffff;
+  --bg3:#e8eaf2;
+  --card:#ffffff;
+  --border:#d4d8e8;
+  --accent:#e8345a;
+  --accent2:#6c4ff0;
+  --accent3:#00b896;
+  --accent4:#f59300;
+  --text:#1a1e2e;
+  --muted:#6b7399;
+  --danger:#e8345a;
+  --warn:#f59300;
+  --good:#00b896;
+  --shadow:0 2px 12px rgba(100,110,160,0.10);
+}
+body,html{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px}
+.dash{min-height:100vh;padding:20px;background:var(--bg)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg2);border-bottom:2px solid var(--border);border-radius:12px 12px 0 0;margin-bottom:2px;box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.brand-name{font-size:18px;font-weight:700;letter-spacing:-0.5px;color:var(--text)}
+.brand-sub{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.nav{display:flex;gap:4px}
+.nav-btn{padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:inherit;transition:all .2s}
+.nav-btn.active{background:var(--accent2);color:#fff;font-weight:500}
+.nav-btn:hover:not(.active){background:var(--bg3);color:var(--text)}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--good)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--good);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.page{display:none}.page.active{display:block}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:16px 0}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:var(--shadow)}
+.stat-card:hover{border-color:var(--accent2);transform:translateY(-2px);box-shadow:0 4px 20px rgba(108,79,240,0.12)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+.stat-card.s1::before{background:var(--accent)}
+.stat-card.s2::before{background:var(--accent2)}
+.stat-card.s3::before{background:var(--accent3)}
+.stat-card.s4::before{background:var(--accent4)}
+.stat-card.s5::before{background:#b044e0}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.stat-val{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;color:var(--text)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:6px}
+.stat-trend{position:absolute;top:16px;right:16px;font-size:11px;padding:3px 8px;border-radius:20px}
+.up{background:rgba(232,52,90,.12);color:var(--danger)}
+.ok{background:rgba(0,184,150,.12);color:var(--good)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+.panel-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:.3px}
+.panel-sub{font-size:11px;color:var(--muted);margin-bottom:16px}
+.risk-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.risk-label{font-size:12px;color:var(--muted);min-width:70px}
+.risk-bar-wrap{flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.risk-bar{height:100%;border-radius:4px}
+.risk-val{font-size:12px;font-family:'JetBrains Mono';min-width:36px;text-align:right}
+.city-table{width:100%;border-collapse:collapse}
+.city-table td{padding:8px 6px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
+.city-table td:first-child{color:var(--muted)}
+.city-table td:last-child{text-align:right;font-family:'JetBrains Mono';font-weight:600}
+.city-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.model-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.model-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative}
+.model-card.best{border-color:var(--accent2);background:#f3f0ff}
+.best-badge{position:absolute;top:10px;right:10px;background:var(--accent2);color:#fff;font-size:10px;padding:3px 8px;border-radius:20px;font-weight:600}
+.model-name{font-size:15px;font-weight:700;margin-bottom:2px;color:var(--text)}
+.model-params{font-size:10px;color:var(--muted);margin-bottom:12px}
+.metrics-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.metric-box{text-align:center}
+.metric-box .mv{font-size:18px;font-weight:700;font-family:'JetBrains Mono'}
+.metric-box .mk{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase}
+.tab-row{display:flex;gap:4px;margin-bottom:16px}
+.tab{padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-family:inherit;transition:all .2s}
+.tab.active{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.fi-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.fi-label{font-size:11px;color:var(--muted);min-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi-bar-wrap{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.fi-bar{height:100%;border-radius:3px}
+.fi-val{font-size:11px;font-family:'JetBrains Mono';color:var(--muted);min-width:40px;text-align:right}
+.predictor-wrap{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:16px}
+.slider-row{margin-bottom:14px}
+.slider-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+.slider-val{color:var(--text);font-weight:500;font-family:'JetBrains Mono'}
+input[type=range]{width:100%;accent-color:var(--accent2);cursor:pointer}
+select{background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 10px;font-family:inherit;font-size:12px;width:100%;cursor:pointer;margin-bottom:14px}
+.predict-btn{width:100%;padding:12px;background:var(--accent2);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:8px}
+.predict-btn:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+.predict-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── Result Panel — redesigned for readability ── */
+.result-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow)}
+
+/* Verdict banner at top */
+.verdict-banner{border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;transition:all .4s}
+.verdict-icon{font-size:28px;line-height:1}
+.verdict-text{}
+.verdict-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.7;margin-bottom:2px}
+.verdict-risk{font-size:22px;font-weight:800;letter-spacing:.5px}
+.verdict-score{font-size:12px;margin-top:2px;opacity:.75}
+
+/* What this means */
+.verdict-meaning{font-size:12px;line-height:1.7;padding:12px 14px;background:var(--bg3);border-radius:8px;color:var(--muted)}
+
+/* Model breakdown — new design */
+.breakdown-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px}
+.model-result-row{background:var(--bg3);border-radius:8px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border)}
+.model-result-row.primary{background:#f3f0ff;border-color:var(--accent2)}
+.mr-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mr-name{font-size:12px;font-weight:600;color:var(--text)}
+.mr-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
+.mr-score-row{display:flex;align-items:center;gap:10px}
+.mr-bar-wrap{flex:1;height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.mr-bar-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.mr-pct{font-size:14px;font-weight:700;font-family:'JetBrains Mono';min-width:38px;text-align:right}
+.mr-verdict-tag{font-size:10px;color:var(--muted);margin-top:5px}
+
+/* Ensemble */
+.ensemble-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:2px dashed var(--border);border-radius:8px;background:var(--bg2)}
+.ens-label{font-size:11px;color:var(--muted)}
+.ens-value{font-size:16px;font-weight:800;font-family:'JetBrains Mono'}
+
+/* Idle state */
+.result-idle{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:10px;color:var(--muted)}
+.result-idle-icon{font-size:40px;opacity:.3}
+.result-idle-text{font-size:13px;text-align:center;opacity:.6;max-width:180px;line-height:1.6}
+
+.loc-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.loc-rank{font-size:11px;font-family:'JetBrains Mono';color:var(--muted);min-width:18px}
+.loc-name{font-size:12px;min-width:90px;color:var(--text)}
+.loc-bar-wrap{flex:1;height:10px;background:var(--bg3);border-radius:5px;overflow:hidden}
+.loc-bar{height:100%;border-radius:5px}
+.loc-count{font-size:12px;font-family:'JetBrains Mono';font-weight:600;min-width:30px;text-align:right}
+.loc-pct{font-size:10px;color:var(--muted);min-width:36px;text-align:right}
+.insight-card{background:var(--bg3);border-radius:10px;padding:14px;border-left:3px solid}
+.insight-val{font-size:22px;font-weight:800;font-family:'JetBrains Mono'}
+.insight-label{font-weight:600;margin:4px 0 2px;font-size:13px;color:var(--text)}
+.insight-sub{font-size:11px;color:var(--muted)}
+.step-row{display:flex;align-items:center;gap:10px;background:var(--bg3);padding:10px 14px;border-radius:8px;border:1px solid var(--border)}
+.api-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:5px 12px;border-radius:20px;margin-bottom:14px;font-weight:500}
+.api-badge.connected{background:rgba(0,184,150,.12);color:var(--good);border:1px solid rgba(0,184,150,.3)}
+.api-badge.disconnected{background:rgba(232,52,90,.12);color:var(--danger);border:1px solid rgba(232,52,90,.3)}
+.api-badge.loading{background:rgba(245,147,0,.12);color:var(--warn);border:1px solid rgba(245,147,0,.3)}
+.api-dot{width:7px;height:7px;border-radius:50%}
+.api-badge.connected  .api-dot{background:var(--good)}
+.api-badge.disconnected .api-dot{background:var(--danger)}
+.api-badge.loading .api-dot{background:var(--warn);animation:pulse 1s infinite}
+#predict-source{font-size:10px;color:var(--muted);text-align:center;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="dash">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">📱</div>
+      <div>
+        <div class="brand-name">BurnoutAI</div>
+        <div class="brand-sub">Digital Burnout &amp; Screen Time Analytics</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="nav-btn active" onclick="showPage('home',this)">Home</button>
+      <button class="nav-btn" onclick="showPage('predictor',this)">Predictor</button>
+      <button class="nav-btn" onclick="showPage('models',this)">Models</button>
+      <button class="nav-btn" onclick="showPage('about',this)">About</button>
+    </div>
+    <div class="live-badge"><div class="live-dot"></div> Live Data</div>
+  </div>
+
+  <!-- HOME PAGE -->
+  <div id="page-home" class="page active">
+    <div class="stats-row">
+      <div class="stat-card s1"><div class="stat-label">Total Users</div><div class="stat-val">1,000</div><div class="stat-sub">Analysis records</div><span class="stat-trend ok">Dataset</span></div>
+      <div class="stat-card s2"><div class="stat-label">Avg Screen Time</div><div class="stat-val">7.7<span style="font-size:16px">h</span></div><div class="stat-sub">Per day</div><span class="stat-trend up">High</span></div>
+      <div class="stat-card s3"><div class="stat-label">High Risk Users</div><div class="stat-val">53.9<span style="font-size:16px">%</span></div><div class="stat-sub">High + Extreme</div><span class="stat-trend up">Alert</span></div>
+      <div class="stat-card s4"><div class="stat-label">Avg Social Media</div><div class="stat-val">2.46<span style="font-size:16px">h</span></div><div class="stat-sub">Per day</div><span class="stat-trend up">+18%</span></div>
+      <div class="stat-card s5"><div class="stat-label">Extreme Burnout</div><div class="stat-val">12.3<span style="font-size:16px">%</span></div><div class="stat-sub">Critical risk</div><span class="stat-trend up">Critical</span></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title" style="font-size:16px;margin-bottom:4px">Top Burnout Risk Factors</div>
+      <div class="panel-sub">What XGBoost learned from 1,000 user behavior records</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div class="insight-card" style="border-color:var(--danger)"><div class="insight-val" style="color:var(--danger)">39.8%</div><div class="insight-label">Daily Screen Time</div><div class="insight-sub">Highest predictor of burnout</div></div>
+        <div class="insight-card" style="border-color:var(--accent2)"><div class="insight-val" style="color:var(--accent2)">17.1%</div><div class="insight-label">Total App Usage</div><div class="insight-sub">Overall app engagement hours</div></div>
+        <div class="insight-card" style="border-color:var(--accent4)"><div class="insight-val" style="color:var(--accent4)">16.2%</div><div class="insight-label">Social Media Usage</div><div class="insight-sub">Social platforms drive burnout</div></div>
+        <div class="insight-card" style="border-color:var(--accent3)"><div class="insight-val" style="color:var(--accent3)">8.9%</div><div class="insight-label">Gaming App Usage</div><div class="insight-sub">Gaming sessions increase risk</div></div>
+        <div class="insight-card" style="border-color:#b044e0"><div class="insight-val" style="color:#b044e0">4.8%</div><div class="insight-label">Age</div><div class="insight-sub">Younger users at higher risk</div></div>
+        <div class="insight-card" style="border-color:var(--muted)"><div class="insight-val" style="color:var(--muted)">4.6%</div><div class="insight-label">Productivity Apps</div><div class="insight-sub">Minor negative correlation</div></div>
+      </div>
+    </div>
+
+    <div class="grid-3col">
+      <div class="panel">
+        <div class="panel-title">Burnout Risk Distribution</div>
+        <div class="panel-sub">4 engineered risk classes</div>
+        <div style="position:relative;height:190px"><canvas id="riskPie"></canvas></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;font-size:11px">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#2ecc71;display:inline-block"></span>Low 11.1%</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#f39c12;display:inline-block"></span>Moderate 35%</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#e74c3c;display:inline-block"></span>High 41.6%</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:9px;height:9px;border-radius:2px;background:#8e44ad;display:inline-block"></span>Extreme 12.3%</span>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">City Burnout Risk Score</div>
+        <div class="panel-sub">Avg burnout score by location</div>
+        <table class="city-table">
+          <tr><td>Phoenix</td><td><span class="city-pill" style="background:rgba(231,76,60,.12);color:#e74c3c">EXTREME</span></td><td style="color:#e74c3c">53.1</td></tr>
+          <tr><td>Chicago</td><td><span class="city-pill" style="background:rgba(231,76,60,.12);color:#e74c3c">HIGH</span></td><td style="color:#e74c3c">52.5</td></tr>
+          <tr><td>Los Angeles</td><td><span class="city-pill" style="background:rgba(231,76,60,.12);color:#e74c3c">HIGH</span></td><td style="color:#e74c3c">51.2</td></tr>
+          <tr><td>Houston</td><td><span class="city-pill" style="background:rgba(243,156,18,.12);color:#f39c12">MODERATE</span></td><td style="color:#f39c12">50.6</td></tr>
+          <tr><td>New York</td><td><span class="city-pill" style="background:rgba(243,156,18,.12);color:#f39c12">MODERATE</span></td><td style="color:#f39c12">50.2</td></tr>
+        </table>
+        <div style="margin-top:14px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.6px">Screen Time by Risk</div>
+          <div class="risk-row"><div class="risk-label" style="color:#2ecc71">Low</div><div class="risk-bar-wrap"><div class="risk-bar" style="width:20%;background:#2ecc71"></div></div><div class="risk-val" style="color:#2ecc71">2.5h</div></div>
+          <div class="risk-row"><div class="risk-label" style="color:#f39c12">Moderate</div><div class="risk-bar-wrap"><div class="risk-bar" style="width:43%;background:#f39c12"></div></div><div class="risk-val" style="color:#f39c12">5.3h</div></div>
+          <div class="risk-row"><div class="risk-label" style="color:#e74c3c">High</div><div class="risk-bar-wrap"><div class="risk-bar" style="width:78%;background:#e74c3c"></div></div><div class="risk-val" style="color:#e74c3c">9.7h</div></div>
+          <div class="risk-row"><div class="risk-label" style="color:#8e44ad">Extreme</div><div class="risk-bar-wrap"><div class="risk-bar" style="width:100%;background:#8e44ad"></div></div><div class="risk-val" style="color:#8e44ad">12.5h</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Users by Location</div>
+        <div class="panel-sub">Total user count per city</div>
+        <div style="position:relative;height:190px;margin-bottom:14px"><canvas id="locBar"></canvas></div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">Breakdown</div>
+        <div class="loc-row"><span class="loc-rank">#1</span><span class="loc-name">New York</span><div class="loc-bar-wrap"><div class="loc-bar" style="width:100%;background:var(--accent2)"></div></div><span class="loc-count" style="color:var(--accent2)">243</span><span class="loc-pct">24.3%</span></div>
+        <div class="loc-row"><span class="loc-rank">#2</span><span class="loc-name">Phoenix</span><div class="loc-bar-wrap"><div class="loc-bar" style="width:82%;background:var(--danger)"></div></div><span class="loc-count" style="color:var(--danger)">199</span><span class="loc-pct">19.9%</span></div>
+        <div class="loc-row"><span class="loc-rank">#3</span><span class="loc-name">Chicago</span><div class="loc-bar-wrap"><div class="loc-bar" style="width:79%;background:var(--accent4)"></div></div><span class="loc-count" style="color:var(--accent4)">192</span><span class="loc-pct">19.2%</span></div>
+        <div class="loc-row"><span class="loc-rank">#4</span><span class="loc-name">Los Angeles</span><div class="loc-bar-wrap"><div class="loc-bar" style="width:76%;background:var(--accent3)"></div></div><span class="loc-count" style="color:var(--accent3)">185</span><span class="loc-pct">18.5%</span></div>
+        <div class="loc-row"><span class="loc-rank">#5</span><span class="loc-name">Houston</span><div class="loc-bar-wrap"><div class="loc-bar" style="width:74%;background:#b044e0"></div></div><span class="loc-count" style="color:#b044e0">181</span><span class="loc-pct">18.1%</span></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Usage Pattern Overview</div>
+        <div class="panel-sub">Average hours/day by category</div>
+        <div style="position:relative;height:200px"><canvas id="usageBar"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Burnout Risk by Gender</div>
+        <div class="panel-sub">Distribution of risk levels across Male / Female users</div>
+        <div style="position:relative;height:200px"><canvas id="genderBurnout"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREDICTOR PAGE -->
+  <div id="page-predictor" class="page">
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat-card s1"><div class="stat-label">Model Used</div><div class="stat-val" style="font-size:20px">XGBoost</div><div class="stat-sub">Best performing model</div></div>
+      <div class="stat-card s2"><div class="stat-label">Accuracy</div><div class="stat-val">87.5<span style="font-size:16px">%</span></div><div class="stat-sub">On test set (200 users)</div></div>
+      <div class="stat-card s3"><div class="stat-label">ROC-AUC</div><div class="stat-val">0.981</div><div class="stat-sub">Ensemble score</div></div>
+    </div>
+    <div class="predictor-wrap">
+      <div class="panel">
+        <div class="panel-title">User Behavior Conditions</div>
+        <div class="panel-sub">Adjust sliders then press Predict to get your result</div>
+
+        <div id="api-status" class="api-badge loading">
+          <div class="api-dot"></div>
+          <span id="api-status-text">Checking Flask API…</span>
+        </div>
+
+        <!-- NOTE: oninput only updates the display label, NO schedulePredict() -->
+        <div class="slider-row"><div class="slider-label"><span>Daily Screen Time (hrs)</span><span class="slider-val" id="vst">7</span></div><input type="range" min="1" max="24" value="7" step="0.5" oninput="document.getElementById('vst').textContent=this.value"></div>
+        <div class="slider-row"><div class="slider-label"><span>Social Media Usage (hrs)</span><span class="slider-val" id="vsm">2.5</span></div><input type="range" min="0" max="5" value="2.5" step="0.1" oninput="document.getElementById('vsm').textContent=parseFloat(this.value).toFixed(1)"></div>
+        <div class="slider-row"><div class="slider-label"><span>Gaming App Usage (hrs)</span><span class="slider-val" id="vga">2</span></div><input type="range" min="0" max="5" value="2" step="0.1" oninput="document.getElementById('vga').textContent=parseFloat(this.value).toFixed(1)"></div>
+        <div class="slider-row"><div class="slider-label"><span>Total App Usage (hrs)</span><span class="slider-val" id="vta">4</span></div><input type="range" min="0" max="12" value="4" step="0.5" oninput="document.getElementById('vta').textContent=this.value"></div>
+        <div class="slider-row"><div class="slider-label"><span>Productivity App Usage (hrs)</span><span class="slider-val" id="vpa">2</span></div><input type="range" min="0" max="5" value="2" step="0.1" oninput="document.getElementById('vpa').textContent=parseFloat(this.value).toFixed(1)"></div>
+        <div class="slider-row"><div class="slider-label"><span>Number of Apps Used</span><span class="slider-val" id="vna">15</span></div><input type="range" min="1" max="30" value="15" step="1" oninput="document.getElementById('vna').textContent=this.value"></div>
+        <div class="slider-row"><div class="slider-label"><span>Age</span><span class="slider-val" id="vag">28</span></div><input type="range" min="13" max="65" value="28" step="1" oninput="document.getElementById('vag').textContent=this.value"></div>
+
+        <div style="margin-bottom:6px;font-size:12px;color:var(--muted)">Gender</div>
+        <select id="sel-gender">
+          <option value="1">Male</option>
+          <option value="0">Female</option>
+        </select>
+
+        <div style="margin-bottom:6px;font-size:12px;color:var(--muted)">Location</div>
+        <select id="sel-location">
+          <option value="3">New York</option>
+          <option value="4">Phoenix</option>
+          <option value="1">Chicago</option>
+          <option value="2">Los Angeles</option>
+          <option value="0">Houston</option>
+        </select>
+
+        <button class="predict-btn" id="predict-btn" onclick="predict()">⚡ Predict Burnout Risk</button>
+      </div>
+
+      <!-- RESULT PANEL — redesigned -->
+      <div class="result-panel" id="result-panel">
+        <!-- Idle state shown before first prediction -->
+        <div class="result-idle" id="result-idle">
+          <div class="result-idle-icon">🔍</div>
+          <div class="result-idle-text">Set your sliders and press <strong>Predict Burnout Risk</strong> to see your assessment</div>
+        </div>
+
+        <!-- Result content (hidden until first prediction) -->
+        <div id="result-content" style="display:none;flex-direction:column;gap:14px">
+
+          <!-- 1. Verdict banner -->
+          <div class="verdict-banner" id="verdict-banner">
+            <div class="verdict-icon" id="verdict-icon">⚠️</div>
+            <div class="verdict-text">
+              <div class="verdict-label">Overall Burnout Risk</div>
+              <div class="verdict-risk" id="verdict-risk-text">MODERATE</div>
+              <div class="verdict-score" id="verdict-score-text">Burnout Score: 48 / 100</div>
+            </div>
+          </div>
+
+          <!-- 2. What this means -->
+          <div class="verdict-meaning" id="verdict-meaning-text">
+            Monitor screen time. Consider digital wellness breaks.
+          </div>
+
+          <!-- 3. Model breakdown -->
+          <div>
+            <div class="breakdown-title">Model Predictions</div>
+
+            <!-- XGBoost -->
+            <div class="model-result-row primary">
+              <div class="mr-header">
+                <span class="mr-name">🏆 XGBoost</span>
+                <span class="mr-badge" id="xgb-verdict-badge" style="background:rgba(108,79,240,.15);color:var(--accent2)">PRIMARY MODEL</span>
+              </div>
+              <div class="mr-score-row">
+                <div class="mr-bar-wrap"><div class="mr-bar-fill" id="xgb-bar" style="width:48%;background:var(--accent2)"></div></div>
+                <span class="mr-pct" id="xgb-pct" style="color:var(--accent2)">48%</span>
+              </div>
+              <div class="mr-verdict-tag" id="xgb-verdict-tag">Confidence: Moderate — This is the deciding model</div>
+            </div>
+
+            <!-- Random Forest -->
+            <div class="model-result-row">
+              <div class="mr-header">
+                <span class="mr-name">🌲 Random Forest</span>
+                <span class="mr-badge" id="rf-verdict-badge" style="background:rgba(0,184,150,.12);color:var(--good)">SECONDARY</span>
+              </div>
+              <div class="mr-score-row">
+                <div class="mr-bar-wrap"><div class="mr-bar-fill" id="rf-bar" style="width:44%;background:var(--accent3)"></div></div>
+                <span class="mr-pct" id="rf-pct" style="color:var(--accent3)">44%</span>
+              </div>
+              <div class="mr-verdict-tag" id="rf-verdict-tag">Supporting prediction — agrees with XGBoost</div>
+            </div>
+
+            <!-- Ensemble -->
+            <div class="ensemble-row">
+              <div>
+                <div class="ens-label">⚖️ Ensemble Average</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px">Combined score of both models</div>
+              </div>
+              <div class="ens-value" id="ens-pct" style="color:var(--accent4)">46%</div>
+            </div>
+          </div>
+
+          <!-- 4. Source tag -->
+          <div id="predict-source" style="font-size:10px;color:var(--muted);text-align:center">–</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELS PAGE -->
+  <div id="page-models" class="page">
+    <div class="model-cards">
+      <div class="model-card best">
+        <div class="best-badge">BEST MODEL</div>
+        <div class="model-name">XGBoost</div>
+        <div class="model-params">n_estimators=200 · max_depth=6 · lr=0.1</div>
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="mv" style="color:var(--accent2)">87.5%</div><div class="mk">Accuracy</div></div>
+          <div class="metric-box"><div class="mv" style="color:var(--accent2)">0.880</div><div class="mk">Precision</div></div>
+          <div class="metric-box"><div class="mv" style="color:var(--accent2)">0.875</div><div class="mk">Recall</div></div>
+          <div class="metric-box"><div class="mv" style="color:var(--accent2)">0.874</div><div class="mk">F1</div></div>
+          <div class="metric-box"><div class="mv" style="color:var(--accent2)">0.981</div><div class="mk">ROC-AUC</div></div>
+        </div>
+      </div>
+      <div class="model-card">
+        <div class="model-name">Random Forest</div>
+        <div class="model-params">n_estimators=200 · max_depth=12 · min_samples=5</div>
+        <div class="metrics-grid">
+          <div class="metric-box"><div class="mv" style="color:var(--accent3)">84.5%</div><div class="mk">Accuracy</div></div>
+          <div class="metric-box"><div class="mv" style="color:var(--accent3)">0.862</div><div class="mk">Precision</div></div>
+          <div class="metric-box"><div class="mv" style="color:var(--accent3)">0.845</div><div class="mk">Recall</div></div>
+          <div class="metric-box"><div class="mv" style="color:var(--accent3)">0.839</div><div class="mk">F1</div></div>
+          <div class="metric-box"><div class="mv" style="color:var(--accent3)">0.979</div><div class="mk">ROC-AUC</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('comparison',this)">Comparison Chart</button>
+      <button class="tab" onclick="switchTab('roc',this)">ROC Curves</button>
+      <button class="tab" onclick="switchTab('importance',this)">Feature Importance</button>
+    </div>
+    <div id="tab-comparison" class="tab-pane active">
+      <div class="panel"><div class="panel-title">Model Metrics Comparison</div><div class="panel-sub">XGBoost consistently outperforms Random Forest</div><div style="position:relative;height:280px"><canvas id="compChart"></canvas></div></div>
+    </div>
+    <div id="tab-roc" class="tab-pane">
+      <div class="panel"><div class="panel-title">ROC Curves</div><div class="panel-sub">XGBoost AUC=0.981 · Random Forest AUC=0.979</div><div style="position:relative;height:280px"><canvas id="rocChart"></canvas></div></div>
+    </div>
+    <div id="tab-importance" class="tab-pane">
+      <div class="grid-2">
+        <div class="panel"><div class="panel-title">XGBoost — Feature Importance</div><div class="panel-sub">Trained on 800 samples</div><div id="xgb-fi"></div></div>
+        <div class="panel"><div class="panel-title">Random Forest — Feature Importance</div><div class="panel-sub">n_estimators=200, max_depth=12</div><div id="rf-fi"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT PAGE -->
+  <div id="page-about" class="page">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title" style="font-size:16px;margin-bottom:12px">Project Overview</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.9">
+          <p style="margin-bottom:8px"><strong style="color:var(--text)">Project:</strong> Digital Burnout &amp; Screen Time Analytics</p>
+          <p style="margin-bottom:8px"><strong style="color:var(--text)">Dataset:</strong> 1,000 users · 10 features · Mobile usage records</p>
+          <p style="margin-bottom:8px"><strong style="color:var(--text)">Target:</strong> Engineered Burnout Risk Label (Low / Moderate / High / Extreme)</p>
+          <p style="margin-bottom:8px"><strong style="color:var(--text)">Split:</strong> 80% train / 20% test — Stratified sampling</p>
+          <p style="margin-bottom:8px"><strong style="color:var(--text)">Best Model:</strong> XGBoost — 87.5% accuracy, 0.981 ROC-AUC</p>
+          <p style="margin-bottom:8px"><strong style="color:var(--text)">Cities:</strong> New York, Phoenix, Chicago, Los Angeles, Houston</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title" style="font-size:16px;margin-bottom:12px">ML Pipeline Steps</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="step-row"><span style="font-family:'JetBrains Mono';color:var(--accent2);font-size:12px;min-width:24px">01</span><span style="font-size:12px">Data Collection &amp; Import</span></div>
+          <div class="step-row"><span style="font-family:'JetBrains Mono';color:var(--accent2);font-size:12px;min-width:24px">02</span><span style="font-size:12px">Preprocessing &amp; Feature Engineering</span></div>
+          <div class="step-row"><span style="font-family:'JetBrains Mono';color:var(--accent2);font-size:12px;min-width:24px">03</span><span style="font-size:12px">EDA — Distributions, Correlations</span></div>
+          <div class="step-row"><span style="font-family:'JetBrains Mono';color:var(--accent2);font-size:12px;min-width:24px">04</span><span style="font-size:12px">Train-Test Split (80/20, stratified)</span></div>
+          <div class="step-row"><span style="font-family:'JetBrains Mono';color:var(--accent2);font-size:12px;min-width:24px">05</span><span style="font-size:12px">Model Training — RF + XGBoost</span></div>
+          <div class="step-row"><span style="font-family:'JetBrains Mono';color:var(--accent2);font-size:12px;min-width:24px">06</span><span style="font-size:12px">Evaluation — Accuracy, F1, ROC-AUC</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <div class="panel-title" style="margin-bottom:12px">Burnout Score Formula</div>
+      <div style="background:var(--bg3);border-radius:8px;padding:16px;font-family:'JetBrains Mono';font-size:13px;color:var(--accent2);line-height:2;border:1px solid var(--border)">
+        Burnout_Score = (Daily_Screen_Time × 0.35) + (Social_Media × 0.30) + (Gaming × 0.20) + (Total_App_Usage × 0.15)<br>
+        <span style="color:var(--muted)">→ Normalized 0–100 → &lt;25 Low | 25–50 Moderate | 50–75 High | &gt;75 Extreme</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════
+// FLASK CONFIG
+// ════════════════════════════════════════════════════════════
+const FLASK_URL    = 'http://127.0.0.1:5000';
+let   flaskAvailable = false;
+
+async function checkFlaskStatus() {
+  const badge    = document.getElementById('api-status');
+  const badgeTxt = document.getElementById('api-status-text');
+  try {
+    const res = await fetch(FLASK_URL + '/health', { signal: AbortSignal.timeout(3000) });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      flaskAvailable = true;
+      badge.className    = 'api-badge connected';
+      badgeTxt.textContent = '🟢 Flask API Connected — Real ML Model';
+    }
+  } catch {
+    flaskAvailable = false;
+    badge.className    = 'api-badge disconnected';
+    badgeTxt.textContent = '🔴 Flask Offline — Using Local Formula';
+  }
+  // Do NOT auto-predict here — wait for button press
+}
+
+// ════════════════════════════════════════════════════════════
+// READ ALL SLIDER VALUES
+// ════════════════════════════════════════════════════════════
+function getValues() {
+  const s = document.querySelectorAll('#page-predictor input[type=range]');
+  return {
+    screen_time:  parseFloat(s[0].value),
+    social_media: parseFloat(s[1].value),
+    gaming:       parseFloat(s[2].value),
+    total_app:    parseFloat(s[3].value),
+    productivity: parseFloat(s[4].value),
+    num_apps:     parseInt(s[5].value),
+    age:          parseInt(s[6].value),
+    gender_enc:   parseInt(document.getElementById('sel-gender').value),
+    location_enc: parseInt(document.getElementById('sel-location').value)
+  };
+}
+
+// ════════════════════════════════════════════════════════════
+// MAIN PREDICT — only called on button press
+// ════════════════════════════════════════════════════════════
+async function predict() {
+  const btn = document.getElementById('predict-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Predicting…';
+
+  if (flaskAvailable) {
+    await predictFromFlask();
+  } else {
+    predictLocal();
+  }
+
+  btn.disabled = false;
+  btn.textContent = '⚡ Predict Burnout Risk';
+}
+
+// ── Call real Flask ML model ─────────────────────────────────
+async function predictFromFlask() {
+  const vals = getValues();
+  try {
+    const res  = await fetch(FLASK_URL + '/predict', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(vals),
+      signal:  AbortSignal.timeout(5000)
+    });
+    const data = await res.json();
+
+    const labelToColor = { Low:'#2ecc71', Moderate:'#f39c12', High:'#e74c3c', Extreme:'#8e44ad' };
+    const labelToMsg   = {
+      Low:      'Your screen habits are in a healthy range. Keep maintaining digital balance and regular offline breaks.',
+      Moderate: 'Your usage is at a moderate level. Consider setting daily screen time limits and scheduling tech-free periods.',
+      High:     'High burnout risk detected. Significantly reduce social media and total screen time. Prioritize sleep and offline activities.',
+      Extreme:  'EXTREME RISK — An immediate digital detox is strongly recommended. Seek support and drastically reduce all screen time.'
+    };
+    const labelToIcon  = { Low:'✅', Moderate:'⚠️', High:'🔴', Extreme:'🚨' };
+
+    const weights  = [12.5, 37.5, 62.5, 87.5];
+    const xgbScore = Math.round(data.xgb_proba.reduce((s,p,i) => s + p * weights[i], 0));
+    const rfScore  = Math.round(data.rf_proba.reduce((s,p,i)  => s + p * weights[i], 0));
+    const ensScore = Math.round((xgbScore + rfScore) / 2);
+
+    const label = data.xgb_label;
+    updateUI(
+      label, xgbScore, rfScore, ensScore,
+      labelToColor[label], labelToMsg[label], labelToIcon[label],
+      '🟢 Flask — Real XGBoost + RF model'
+    );
+  } catch {
+    predictLocal();
+  }
+}
+
+// ── Local fallback formula ────────────────────────────────────
+function predictLocal() {
+  const v = getValues();
+  const score   = v.screen_time*0.35 + v.social_media*0.30 + v.gaming*0.20 + v.total_app*0.15;
+  const maxScore = 24*0.35 + 5*0.30 + 5*0.20 + 12*0.15;
+  const pct      = Math.round(score / maxScore * 100);
+  const xpct     = Math.min(100, Math.round(pct * 1.05));
+  const rpct     = Math.min(100, Math.round(pct * 0.97));
+  const epct     = Math.round((xpct + rpct) / 2);
+
+  let label, color, msg, icon;
+  if      (pct < 25) { label='Low';      color='#2ecc71'; icon='✅'; msg='Your screen habits are in a healthy range. Keep maintaining digital balance and regular offline breaks.'; }
+  else if (pct < 50) { label='Moderate'; color='#f39c12'; icon='⚠️'; msg='Your usage is at a moderate level. Consider setting daily screen time limits and scheduling tech-free periods.'; }
+  else if (pct < 75) { label='High';     color='#e74c3c'; icon='🔴'; msg='High burnout risk detected. Significantly reduce social media and total screen time. Prioritize sleep and offline activities.'; }
+  else               { label='Extreme';  color='#8e44ad'; icon='🚨'; msg='EXTREME RISK — An immediate digital detox is strongly recommended. Seek support and drastically reduce all screen time.'; }
+
+  updateUI(label, xpct, rpct, epct, color, msg, icon, '🟡 Local formula (Flask offline)');
+}
+
+// ════════════════════════════════════════════════════════════
+// UPDATE UI — new readable result panel
+// ════════════════════════════════════════════════════════════
+function updateUI(label, xpct, rpct, epct, color, msg, icon, source) {
+  // Show result content, hide idle
+  document.getElementById('result-idle').style.display = 'none';
+  const content = document.getElementById('result-content');
+  content.style.display = 'flex';
+
+  // Verdict banner
+  const banner = document.getElementById('verdict-banner');
+  banner.style.background = hexToRgba(color, 0.10);
+  banner.style.border = '1.5px solid ' + hexToRgba(color, 0.35);
+  document.getElementById('verdict-icon').textContent = icon;
+  document.getElementById('verdict-risk-text').textContent = label.toUpperCase() + ' RISK';
+  document.getElementById('verdict-risk-text').style.color = color;
+  document.getElementById('verdict-score-text').textContent = 'Burnout Score: ' + xpct + ' / 100';
+  document.getElementById('verdict-score-text').style.color = color;
+
+  // Meaning text
+  document.getElementById('verdict-meaning-text').textContent = msg;
+
+  // XGBoost bar
+  const xgbBar = document.getElementById('xgb-bar');
+  xgbBar.style.width = xpct + '%';
+  xgbBar.style.background = color;
+  document.getElementById('xgb-pct').textContent = xpct + '%';
+  document.getElementById('xgb-pct').style.color = color;
+  document.getElementById('xgb-verdict-badge').textContent = label.toUpperCase();
+  document.getElementById('xgb-verdict-badge').style.background = hexToRgba(color, 0.12);
+  document.getElementById('xgb-verdict-badge').style.color = color;
+
+  // Confidence tag
+  let conf = xpct >= 75 ? 'High confidence' : xpct >= 50 ? 'Moderate confidence' : 'Low confidence';
+  document.getElementById('xgb-verdict-tag').textContent = conf + ' — This is the deciding model';
+
+  // Random Forest bar
+  const rfBar = document.getElementById('rf-bar');
+  rfBar.style.width = rpct + '%';
+  document.getElementById('rf-pct').textContent = rpct + '%';
+
+  // Agreement tag
+  const diff = Math.abs(xpct - rpct);
+  let agreement = diff <= 5 ? 'Strong agreement with XGBoost ✓' : diff <= 15 ? 'Slight variation from XGBoost' : 'Notable disagreement — XGBoost takes priority';
+  document.getElementById('rf-verdict-tag').textContent = 'RF Score: ' + rpct + '% — ' + agreement;
+
+  // Ensemble
+  document.getElementById('ens-pct').textContent = epct + '%';
+
+  // Source
+  document.getElementById('predict-source').textContent = source;
+}
+
+function hexToRgba(hex, alpha) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+alpha+')';
+}
+
+// ════════════════════════════════════════════════════════════
+// PAGE NAVIGATION
+// ════════════════════════════════════════════════════════════
+function showPage(p, btn) {
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  btn.classList.add('active');
+  if (p === 'models') setTimeout(buildModelCharts, 100);
+}
+
+// ════════════════════════════════════════════════════════════
+// HOME PAGE CHARTS
+// ════════════════════════════════════════════════════════════
+Chart.defaults.color       = '#6b7399';
+Chart.defaults.borderColor = '#d4d8e8';
+
+new Chart(document.getElementById('riskPie'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Low','Moderate','High','Extreme'],
+    datasets: [{ data:[111,350,416,123], backgroundColor:['#2ecc71','#f39c12','#e74c3c','#8e44ad'], borderWidth:2, borderColor:'#ffffff' }]
+  },
+  options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } }
+});
+
+new Chart(document.getElementById('locBar'), {
+  type: 'bar',
+  data: {
+    labels: ['New York','Phoenix','Chicago','Los Angeles','Houston'],
+    datasets: [{ label:'Users', data:[243,199,192,185,181], backgroundColor:['#6c4ff0','#e8345a','#f59300','#00b896','#b044e0'], borderRadius:6, borderSkipped:false }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ grid:{ color:'#e8eaf2' }, beginAtZero:true, ticks:{ stepSize:50 } }, x:{ grid:{ display:false }, ticks:{ font:{ size:10 } } } }
+  }
+});
+
+new Chart(document.getElementById('usageBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Screen Time','Social Media','Gaming','Total App','Productivity'],
+    datasets: [{ label:'Avg Hours/Day', data:[7.7,2.46,2.48,4.1,1.9], backgroundColor:['#e8345a','#6c4ff0','#00b896','#f59300','#b044e0'], borderRadius:6 }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{ y:{ grid:{ color:'#e8eaf2' }, beginAtZero:true }, x:{ grid:{ display:false } } }
+  }
+});
+
+new Chart(document.getElementById('genderBurnout'), {
+  type: 'bar',
+  data: {
+    labels: ['Male','Female'],
+    datasets: [
+      { label:'Low',      data:[58,53],   backgroundColor:'#2ecc71', borderRadius:0 },
+      { label:'Moderate', data:[185,165], backgroundColor:'#f39c12', borderRadius:0 },
+      { label:'High',     data:[218,198], backgroundColor:'#e74c3c', borderRadius:0 },
+      { label:'Extreme',  data:[55,68],   backgroundColor:'#8e44ad', borderRadius:4 }
+    ]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 }, boxWidth:12, padding:12 } } },
+    scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'#e8eaf2' }, beginAtZero:true } }
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// MODELS PAGE CHARTS
+// ════════════════════════════════════════════════════════════
+let modelChartsBuilt = false;
+function buildModelCharts() {
+  if (modelChartsBuilt) return;
+  modelChartsBuilt = true;
+
+  new Chart(document.getElementById('compChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Accuracy','Precision','Recall','F1 Score','ROC-AUC'],
+      datasets: [
+        { label:'XGBoost',       data:[87.5,88.0,87.5,87.4,98.1], backgroundColor:'#6c4ff0', borderRadius:6 },
+        { label:'Random Forest', data:[84.5,86.2,84.5,83.9,97.9], backgroundColor:'#00b896', borderRadius:6 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ font:{ size:12 } } } },
+      scales:{ y:{ grid:{ color:'#e8eaf2' }, min:80, max:100, ticks:{ callback:v=>v+'%' } }, x:{ grid:{ display:false } } }
+    }
+  });
+
+  const pts = (auc, n=50) => {
+    let d = [];
+    for (let i=0; i<=n; i++) { let fpr=i/n; d.push({ x:fpr, y:Math.min(1, Math.pow(fpr, 1/(auc*3))) }); }
+    return d;
+  };
+  new Chart(document.getElementById('rocChart'), {
+    type: 'scatter',
+    data: { datasets: [
+      { label:'XGBoost (AUC=0.981)',      data:pts(0.981), borderColor:'#6c4ff0', backgroundColor:'transparent', showLine:true, tension:.4, pointRadius:0, borderWidth:2 },
+      { label:'Random Forest (AUC=0.979)',data:pts(0.979), borderColor:'#00b896', backgroundColor:'transparent', showLine:true, tension:.4, pointRadius:0, borderWidth:2 },
+      { label:'Baseline', data:[{x:0,y:0},{x:1,y:1}], borderColor:'#d4d8e8', backgroundColor:'transparent', showLine:true, pointRadius:0, borderDash:[4,4], borderWidth:1 }
+    ]},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales:{ x:{ title:{ display:true, text:'FPR' }, min:0, max:1, grid:{ color:'#e8eaf2' } }, y:{ title:{ display:true, text:'TPR' }, min:0, max:1, grid:{ color:'#e8eaf2' } } }
+    }
+  });
+
+  const xgbFI = {'Daily Screen Time':39.81,'Total App Usage':17.09,'Social Media':16.23,'Gaming':8.92,'Age':4.81,'Productivity':4.62,'Apps Used':2.97,'Gender':2.66,'Location':2.89};
+  const rfFI  = {'Daily Screen Time':47.14,'Total App Usage':14.25,'Social Media':13.18,'Gaming':8.0, 'Age':4.7, 'Productivity':5.54,'Apps Used':4.06,'Gender':0.88,'Location':2.24};
+  const maxX  = 47;
+  ['xgb-fi','rf-fi'].forEach((id, idx) => {
+    const fi  = idx === 0 ? xgbFI : rfFI;
+    const col = idx === 0 ? '#6c4ff0' : '#00b896';
+    const sorted = Object.entries(fi).sort((a,b) => b[1]-a[1]);
+    document.getElementById(id).innerHTML = sorted.map(([k,v]) => `
+      <div class="fi-row">
+        <div class="fi-label">${k}</div>
+        <div class="fi-bar-wrap"><div class="fi-bar" style="width:${(v/maxX*100).toFixed(1)}%;background:${col}"></div></div>
+        <div class="fi-val">${v.toFixed(1)}%</div>
+      </div>`).join('');
+  });
+}
+
+function switchTab(t, btn) {
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+// INIT — only check Flask status, no auto-predict
+checkFlaskStatus();
+</script>
+</body>
+</html>
