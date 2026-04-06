@@ -1,10 +1,10 @@
-# 📱 Digital Burnout & Screen Time Analysis
+#  Digital Burnout & Screen Time Analysis
 
 A machine learning project that analyzes mobile usage patterns to predict **digital burnout risk** levels. It combines exploratory data analysis, feature engineering, and two classification models — Random Forest and XGBoost — with a Flask web app for real-time predictions.
 
 ---
 
-## 🗂️ Project Structure
+##  Project Structure
 
 ```
 Digital_Burnout-Screen_Time_Analysis/
@@ -33,7 +33,7 @@ Digital_Burnout-Screen_Time_Analysis/
 
 ---
 
-## 🔍 Overview
+##  Overview
 
 The pipeline covers end-to-end ML workflow:
 
@@ -47,7 +47,7 @@ The pipeline covers end-to-end ML workflow:
 
 ---
 
-## 🎯 Target Variable
+##  Target Variable
 
 A **Burnout Score** is computed as a weighted sum of screen time features:
 
@@ -69,7 +69,7 @@ The normalized score (0–100) is then classified into four risk levels:
 
 ---
 
-## 📊 Dataset
+##  Dataset
 
 **File:** `data/mobile_usage_behavioral_analysis.csv`
 
@@ -88,7 +88,7 @@ The normalized score (0–100) is then classified into four risk levels:
 
 ---
 
-## ⚙️ Installation
+##  Installation
 
 ```bash
 git clone https://github.com/your-username/Digital_Burnout-Screen_Time_Analysis.git
@@ -99,7 +99,7 @@ pip install pandas numpy matplotlib seaborn scikit-learn xgboost flask flask-cor
 
 ---
 
-## 🚀 Usage
+##  Usage
 
 ### Run the full ML pipeline
 
@@ -153,7 +153,7 @@ Content-Type: application/json
 
 ---
 
-## 🤖 Models
+##  Models
 
 | Model | Algorithm | Key Hyperparameters |
 |---|---|---|
@@ -164,7 +164,7 @@ Both models are evaluated on **Accuracy** and **macro ROC-AUC**. The better-perf
 
 ---
 
-## 📈 Output Plots
+##  Output Plots
 
 All plots are saved to the `outputs/` folder automatically when you run `main.py`:
 
@@ -181,7 +181,7 @@ All plots are saved to the `outputs/` folder automatically when you run `main.py
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Data:** pandas, NumPy
 - **Visualisation:** Matplotlib, Seaborn
